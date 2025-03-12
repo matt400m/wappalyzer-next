@@ -13,15 +13,6 @@ from wappalyzer.core.analyzer import http_scan
 from wappalyzer.core.utils import pretty_print, write_to_file
 from wappalyzer.browser.analyzer import DriverPool, cookie_to_cookies, process_url, merge_technologies
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-i', help='import from file or enter a url', dest='input_file')
-parser.add_argument('--scan-type', help='fast, balanced or full', dest='scan_type', default='full', type=str.lower)
-parser.add_argument('-t', '--threads', help='number of threads', dest='thread_num', default=5, type=int)
-parser.add_argument('-oJ', help='json output file', dest='json_output_file')
-parser.add_argument('-oC', help='csv output file', dest='csv_output_file')
-parser.add_argument('-oH', help='html output file', dest='html_output_file')
-parser.add_argument('-c', '--cookie', help='cookie string', dest='cookie')
-args = parser.parse_args()
 
 def analyze(url, scan_type='full', threads=3, cookie=None):
     """Analyze a single URL"""
@@ -43,12 +34,23 @@ def analyze(url, scan_type='full', threads=3, cookie=None):
                     print(f"Error during final cleanup: {str(e)}")
     return {url: http_scan(url, scan_type, cookie)}
 
+
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', help='import from file or enter a url', dest='input_file')
+    parser.add_argument('--scan-type', help='fast, balanced or full', dest='scan_type', default='full', type=str.lower)
+    parser.add_argument('-t', '--threads', help='number of threads', dest='thread_num', default=5, type=int)
+    parser.add_argument('-oJ', help='json output file', dest='json_output_file')
+    parser.add_argument('-oC', help='csv output file', dest='csv_output_file')
+    parser.add_argument('-oH', help='html output file', dest='html_output_file')
+    parser.add_argument('-c', '--cookie', help='cookie string', dest='cookie')
+    args = parser.parse_args()
+
     print('\n\t' + bold(green('wappalyzer')) + '\n')
     if not args.input_file:
         parser.print_help()
         exit(22)
-    
+
     result_db = {}
 
     def process_detections(url_detections, scan_type='full'):
@@ -65,7 +67,7 @@ def main():
         results = {}
         driver_pool = None
         interrupted = False
-        
+
         def worker(worker_id, url_queue, result_queue, lock, cookie, scan_type='full'):
             """Process URLs from the queue"""
             try:
@@ -74,7 +76,7 @@ def main():
                         url = url_queue.get_nowait()
                     except queue.Empty:
                         break
-                    
+
                     print(f"Processing: {url}")
                     try:
                         if scan_type == 'full':
@@ -96,18 +98,18 @@ def main():
                         url_queue.task_done()
             except Exception as e:
                 print(f"Worker {worker_id} encountered an error: {str(e)}")
-        
+
         try:
             driver_pool = DriverPool(size=min(num_threads, 3))  # Limit max concurrent drivers
-            
+
             url_queue = Queue()
             result_queue = Queue()
             for url in urls:
                 url_queue.put(url)
-                
+
             threads = []
             lock = threading.Lock()
-            
+
             for i in range(num_threads):
                 thread = threading.Thread(
                     target=worker,
@@ -116,14 +118,14 @@ def main():
                 thread.daemon = True
                 thread.start()
                 threads.append(thread)
-                
+
             # Wait for all tasks to complete or interruption
             try:
                 url_queue.join()
             except KeyboardInterrupt:
                 interrupted = True
                 print("\nInterrupted! Saving partial results...")
-            
+
             # Process available results
             while not result_queue.empty():
                 url, detections = result_queue.get()
@@ -133,9 +135,9 @@ def main():
                     results[url] = merge_technologies(detections)
                 else:
                     results[url] = detections
-                    
+
             return results
-            
+
         except Exception as e:
             print(f"Error in process_urls: {str(e)}")
             return results
@@ -188,6 +190,7 @@ def main():
             write_to_file(args.csv_output_file, result, format='csv')
         elif args.html_output_file:
             write_to_file(args.html_output_file, result, format='html')
+
 
 if __name__ == '__main__':
     main()
