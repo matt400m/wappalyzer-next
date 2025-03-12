@@ -17,7 +17,7 @@ setup(
     author='Somdev Sangwan',
     author_email='s0md3v@gmail.com',
     license='GNU General Public License v3',
-    url='https://github.com/s0md3v/wappalyzer-next',
+    url='https://github.com/matt400m/wappalyzer-next',
     download_url='https://github.com/s0md3v/wappalyzer-next/archive/1.0.11.zip',
     packages=find_packages(),
     package_data={'wappalyzer': ['data/*']},
