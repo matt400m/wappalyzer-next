@@ -66,7 +66,7 @@ class DriverPool:
         """Get a driver from the pool with proper resource management"""
         driver = None
         try:
-            driver = self.pool.get(timeout=30)  # Wait up to 30 seconds for a driver
+            driver = self.pool.get(timeout=120)  # Wait up to 30 seconds for a driver
             yield driver
         except Exception as e:
             print(f"Error with driver: {str(e)}")

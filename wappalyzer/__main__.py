@@ -19,7 +19,7 @@ def analyze(url, scan_type='full', threads=3, cookie=None):
     if scan_type.lower() == 'full':
         driver_pool = None
         try:
-            driver_pool = DriverPool(size=1)  # Single driver for one URL
+            driver_pool = DriverPool(size=1, max_retries=6)  # Single driver for one URL
             with driver_pool.get_driver() as driver:
                 if cookie:
                     for cookie_dict in cookie_to_cookies(cookie):
