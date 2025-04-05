@@ -14,7 +14,7 @@ from wappalyzer.core.utils import pretty_print, write_to_file
 from wappalyzer.browser.analyzer import DriverPool, cookie_to_cookies, process_url, merge_technologies
 
 
-def analyze(url, scan_type='full', threads=3, cookie=None):
+def analyze(url, scan_type='full', threads=3, cookie=None, sleep_time_for_full=1):
     """Analyze a single URL"""
     if scan_type.lower() == 'full':
         driver_pool = None
@@ -24,7 +24,7 @@ def analyze(url, scan_type='full', threads=3, cookie=None):
                 if cookie:
                     for cookie_dict in cookie_to_cookies(cookie):
                         driver.add_cookie(cookie_dict)
-                url, detections = process_url(driver, url)
+                url, detections = process_url(driver, url, sleep_time_for_full)
                 return {url: merge_technologies(detections)}
         finally:
             if driver_pool:
